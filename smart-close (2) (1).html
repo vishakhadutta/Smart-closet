@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCloset | Wardrobe Management Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        .outfit-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            border-bottom: 1px solid var(--grey);
+            padding-bottom: 3px;
+            margin-top: 12px;
+        }
+
+        .outfit-row {
+            padding: 6px 0;
+            font-size: 14px;
+            color: #444;
+            border-left: 4px solid var(--primary-light);
+            padding-left: 12px;
+            margin-bottom: 4px;
+            background-color: #f9f7fc;
+            border-radius: 4px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        :root {
+            --primary: #6a1b9a;
+            --primary-dark: #4a148c;
+            --primary-light: #9c27b0;
+            --secondary: #9c27b0;
+            --danger: #d32f2f;
+            --warning: #f57c00;
+            --grey-light: #f5f8fa;
+            --grey: #dadce0;
+            --text: #3c4043;
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            max-width: 1100px;
+            margin: 20px auto;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--card-shadow);
+            border-radius: 16px;
+            overflow: hidden;
+            background-color: white;
+            flex: 1;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .chat-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .chat-title i {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .chat-title h1 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .chat-title span {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .chat-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(5px);
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .chat-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            scroll-behavior: smooth;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        .message {
+            display: flex;
+            gap: 14px;
+            max-width: 75%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .bot .avatar {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+
+        .user .avatar {
+            background: linear-gradient(135deg, var(--secondary), #7b1fa2);
+        }
+
+        .message-content {
+            background-color: #f6f8fc;
+            padding: 14px 18px;
+            border-radius: 18px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            line-height: 1.6;
+            font-size: 15px;
+            position: relative;
+        }
+
+        .bot .message-content {
+            border-top-left-radius: 4px;
+        }
+
+        .user .message-content {
+            background: linear-gradient(135deg, var(--secondary), var(--primary-dark));
+            color: white;
+            border-top-right-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #9aa0a6;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .message-time i {
+            font-size: 10px;
+        }
+
+        .user .message-time {
+            color: rgba(255, 255, 255, 0.7);
+            justify-content: flex-end;
+        }
+
+        .suggestions {
+            padding: 18px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-top: 1px solid var(--grey);
+            background-color: #f9fbfd;
+        }
+
+        .suggestion-chip {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 50px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: var(--transition);
+            font-weight: 500;
+            color: var(--primary-dark);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .suggestion-chip:hover {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.2);
+        }
+
+        .input-area {
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-top: 1px solid var(--grey);
+            background-color: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            z-index: 5;
+        }
+
+        .input-btn {
+            background: #f0f4f8;
+            border: 1px solid #e0e0e0;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-btn:hover {
+            background-color: #e8f0fb;
+            color: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        #send-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+        }
+
+        #send-btn:hover {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            box-shadow: 0 4px 12px rgba(106, 27, 154, 0.3);
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 14px 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 24px;
+            font-size: 15px;
+            outline: none;
+            transition: var(--transition);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            background-color: #f9fafc;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(106, 27, 154, 0.15);
+        }
+
+        .wardrobe-bar {
+            background: linear-gradient(to right, #f9fbfd, #f5f0ff);
+            padding: 16px 24px;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            border-top: 1px solid var(--grey);
+            scrollbar-width: thin;
+            position: relative;
+        }
+
+        .wardrobe-bar::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 60px;
+            height: 100%;
+            background: linear-gradient(to right, transparent, #f5f0ff);
+            pointer-events: none;
+        }
+
+        .clothing-item {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .clothing-item:hover {
+            border-color: var(--primary);
+            background-color: #f5f0ff;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-badge {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .category-badge::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            opacity: 0.3;
+        }
+
+        .category-tops {
+            background-color: #5e35b1;
+        }
+
+        .category-tops::after {
+            border-color: #5e35b1;
+        }
+
+        .category-bottoms {
+            background-color: #43a047;
+        }
+
+        .category-bottoms::after {
+            border-color: #43a047;
+        }
+
+        .category-shoes {
+            background-color: #ef6c00;
+        }
+
+        .category-shoes::after {
+            border-color: #ef6c00;
+        }
+
+        .category-accessories {
+            background-color: #1976d2;
+        }
+
+        .category-accessories::after {
+            border-color: #1976d2;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            animation: fadeInWelcome 0.8s ease;
+        }
+
+        @keyframes fadeInWelcome {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-message h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 0.5px;
+        }
+
+        .welcome-message p {
+            font-size: 16px;
+            max-width: 600px;
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .welcome-icon {
+            font-size: 42px;
+            color: white;
+            width: 110px;
+            height: 110px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(106, 27, 154, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-icon::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) rotate(45deg);
+            }
+
+            50% {
+                transform: translateX(100%) rotate(45deg);
+            }
+
+            100% {
+                transform: translateX(100%) rotate(45deg);
+            }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 8px;
+            color: white;
+        }
+
+        .status-online {
+            background-color: var(--primary-light);
+        }
+
+        .section-heading {
+            display: block;
+            font-size: 16px;
+            color: var(--primary-dark);
+            margin-top: 12px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid var(--grey);
+            padding-bottom: 3px;
+        }
+
+        .item-heading {
+            display: inline-block;
+            font-weight: 600;
+            margin-right: 6px;
+            color: var(--danger);
+        }
+
+        .outfit-heading {
+            display: inline-block;
+            font-weight: 600;
+            margin-right: 6px;
+            color: var(--primary);
+        }
+
+        .message-content {
+            line-height: 1.7;
+        }
+
+        .message-content br {
+            content: "";
+            margin: 6px 0;
+            display: block;
+        }
+
+        .message-content ul {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+
+        .message-content li {
+            margin-bottom: 4px;
+        }
+
+        .message-content strong {
+            color: var(--primary-dark);
+        }
+
+        .message-content em {
+            font-style: italic;
+            color: var(--secondary);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background-color: var(--primary-light);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        footer {
+            height: 40px;
+            background-color: var(--primary-dark);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .suggestions {
+            padding: 18px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-top: 1px solid var(--grey);
+            background-color: #f9fbfd;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 100vh;
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .welcome-message h2 {
+                font-size: 24px;
+            }
+
+            .welcome-icon {
+                width: 90px;
+                height: 90px;
+                font-size: 36px;
+            }
+
+            .input-area {
+                padding: 14px 16px;
+            }
+
+            .suggestions {
+                padding: 14px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-title">
+                <i class="fas fa-tshirt"></i>
+                <h1>SmartCloset<span class="status-badge status-online">ONLINE</span></h1>
+            </div>
+            <div class="chat-controls">
+                <button class="control-btn" title="Help Center">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+
+            </div>
+        </div>
+
+        <div class="chat-body">
+            <div class="messages-container">
+                <div class="welcome-message">
+                    <div class="welcome-icon">
+                        <i class="fas fa-tshirt"></i>
+                    </div>
+                    <h2>Welcome to SmartCloset</h2>
+                    <p>Your intelligent wardrobe management assistant. I can help you organize your clothing, suggest
+                        outfits, track seasonal items, provide fashion advice, and manage your wardrobe inventory.</p>
+                </div>
+
+                <div class="message bot">
+                    <div class="avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <div class="message-content">
+                            Hello! I'm SmartCloset, your personal wardrobe assistant. How can I help you organize your
+                            closet today?
+                        </div>
+                        <div class="message-time">
+                            <i class="fas fa-check-double"></i> Just now
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wardrobe-bar">
+                <div class="clothing-item">
+                    <span class="category-badge category-tops"></span>
+                    <span>T-Shirts & Tops</span>
+                </div>
+                <div class="clothing-item">
+                    <span class="category-badge category-bottoms"></span>
+                    <span>Pants & Skirts</span>
+                </div>
+                <div class="clothing-item">
+                    <span class="category-badge category-shoes"></span>
+                    <span>Shoes & Footwear</span>
+                </div>
+                <div class="clothing-item">
+                    <span class="category-badge category-accessories"></span>
+                    <span>Accessories</span>
+                </div>
+            </div>
+
+            <div class="suggestions">
+                <div class="suggestion-chip">Outfit suggestions</div>
+                <!-- <div class="suggestion-chip">Track seasonal items</div>
+                <div class="suggestion-chip">Add new clothes</div> -->
+                <div class="suggestion-chip">Organize by color</div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" class="input-field" placeholder="Ask SmartCloset about your wardrobe...">
+                <button class="input-btn" id="send-btn" title="Send Message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2025 SmartCloset. All rights reserved.</p>
+        <p>Powered by Gemini AI</p>
+        <p>Version 1.0.0</p>
+
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const messagesContainer = document.querySelector('.messages-container');
+            const inputField = document.querySelector('.input-field');
+            const sendButton = document.querySelector('#send-btn');
+            const suggestionChips = document.querySelectorAll('.suggestion-chip');
+            const clothingItems = document.querySelectorAll('.clothing-item');
+
+            let wardrobe = JSON.parse(localStorage.getItem('wardrobe')) || {
+                tops: ["White t-shirt", "Black polo", "Blue button-down", "Gray sweater"],
+                bottoms: ["Blue jeans", "Black slacks", "Khaki chinos", "Navy shorts"],
+                shoes: ["Brown leather boots", "White sneakers", "Black dress shoes", "Running shoes"],
+                accessories: ["Silver watch", "Black belt", "Blue tie", "Sunglasses"]
+            };
+
+            const GEMINI_API_KEY = "AIzaSyC-tq48I4knEQNmfB4achMNZWINPsH5E9w";
+            const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+            const WEATHER_API_KEY = "e20a877c9a2e5fba787b993f3c8faf77";
+
+            function saveWardrobe() {
+                localStorage.setItem('wardrobe', JSON.stringify(wardrobe));
+            }
+
+            if (sendButton) sendButton.addEventListener('click', handleSendMessage);
+            if (inputField) inputField.addEventListener('keypress', e => {
+                if (e.key === 'Enter') handleSendMessage();
+            });
+
+            suggestionChips.forEach(chip => chip.addEventListener('click', () => {
+                inputField.value = chip.textContent;
+                handleSendMessage();
+            }));
+
+            clothingItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const categoryElement = item.querySelector('span:last-child');
+                    if (categoryElement) showCategoryItems(categoryElement.textContent);
+                });
+            });
+
+            async function getUserLocation() {
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject("Geolocation not supported");
+                    } else {
+                        navigator.geolocation.getCurrentPosition(
+                            pos => resolve(pos.coords),
+                            err => reject("Location access denied")
+                        );
+                    }
+                });
+            }
+
+            async function getWeatherByCoords(lat, lon) {
+                try {
+                    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`);
+                    const data = await res.json();
+
+                    const condition = data.weather[0].main.toLowerCase(); // used for emoji mapping
+                    const description = data.weather[0].description; // more detailed, human-friendly
+                    const temp = data.main.temp;
+                    const city = data.name;
+
+                    const emojiMap = {
+                        clear: "☀️",
+                        clouds: "☁️",
+                        rain: "🌧️",
+                        drizzle: "🌦️",
+                        thunderstorm: "⛈️",
+                        snow: "❄️",
+                        mist: "🌫️",
+                        fog: "🌫️",
+                        haze: "🌫️"
+                    };
+
+                    const emoji = emojiMap[condition] || "🌤️";
+                    return `${emoji} The weather in ${city} is ${description} with a temperature of ${temp}°C.`;
+                } catch (err) {
+                    console.error("Weather fetch error:", err);
+                    return "🌍 Weather data is currently unavailable.";
+                }
+            }
+
+
+            async function handleSendMessage() {
+                if (!inputField || !inputField.value.trim()) return;
+
+                const userMessage = inputField.value.trim();
+                addMessageToChat(userMessage, 'user');
+                inputField.value = '';
+
+                const lowerMessage = userMessage.toLowerCase();
+                const isAdd = lowerMessage.startsWith("add ");
+                const isRemove = lowerMessage.startsWith("remove ");
+
+                // ✅ Smart add/remove
+                if (isAdd || isRemove) {
+                    const action = isAdd ? "add" : "remove";
+                    const itemText = userMessage.slice(action.length).trim();
+                    const typingIndicator = addTypingIndicator();
+                    const category = await askGeminiForCategory(itemText);
+                    typingIndicator.remove();
+
+                    if (!category || !wardrobe[category]) {
+                        addMessageToChat(`⚠️ I couldn't determine the category for "<strong>${itemText}</strong>".`, 'bot');
+                        return;
+                    }
+
+                    if (action === "add") {
+                        wardrobe[category].push(itemText);
+                        saveWardrobe();
+                        addMessageToChat(`✅ Added "<strong>${itemText}</strong>" to <strong>${category}</strong>.`, 'bot');
+                    } else {
+                        const index = wardrobe[category].findIndex(item => item.toLowerCase() === itemText.toLowerCase());
+                        if (index !== -1) {
+                            wardrobe[category].splice(index, 1);
+                            saveWardrobe();
+                            addMessageToChat(`🗑️ Removed "<strong>${itemText}</strong>" from <strong>${category}</strong>.`, 'bot');
+                        } else {
+                            addMessageToChat(`⚠️ Couldn't find "<strong>${itemText}</strong>" in <strong>${category}</strong>.`, 'bot');
+                        }
+                    }
+                    return;
+                }
+
+                // ✅ Weather-based outfit suggestion
+                if (
+                    lowerMessage.includes("what should i wear today") ||
+                    lowerMessage.includes("outfit based on today") ||
+                    lowerMessage.includes("weather outfit") ||
+                    lowerMessage.includes("today's weather") ||
+                    lowerMessage.includes("todays weather") ||
+                    lowerMessage.includes("today weather") ||
+                    lowerMessage.includes("suggest based on weather")
+                ) {
+                    const typingIndicator = addTypingIndicator();
+                    try {
+                        const coords = await getUserLocation();
+                        const weather = await getWeatherByCoords(coords.latitude, coords.longitude);
+
+                        const prompt = `
+${weather}
+
+👕 Based on the weather and the following wardrobe:
+${JSON.stringify(wardrobe)}
+
+Suggest an outfit in this format:
+
+{emoji} The weather in {city} is {description} with a temperature of {temp}°C.
+
+👕 Outfit suggestion:
+Top: ...
+Bottom: ...
+Shoes: ...
+Accessories: ...
+`;
+
+                        const response = await getGeminiResponse(prompt);
+                        typingIndicator.remove();
+                        addMessageToChat(response, 'bot');
+                    } catch (error) {
+                        typingIndicator.remove();
+                        console.error("Weather/Location Error:", error);
+                        addMessageToChat("⚠️ I couldn't get your location or weather. Please enable location access.", 'bot');
+                    }
+                    return;
+                }
+
+                // ✅ Default Gemini response
+                const typingIndicator = addTypingIndicator();
+                try {
+                    const response = await getGeminiResponse(userMessage);
+                    typingIndicator.remove();
+                    addMessageToChat(response, 'bot');
+                } catch (error) {
+                    console.error("Gemini Error:", error);
+                    typingIndicator.remove();
+                    addMessageToChat("⚠️ Something went wrong. Try again.", 'bot');
+                }
+            }
+
+
+
+
+            async function getGeminiResponse(userMessage) {
+                const prompt = `You are SmartCloset, an AI wardrobe assistant.\nWardrobe: ${JSON.stringify(wardrobe)}\nUser: ${userMessage}`;
+                const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await res.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm not sure how to respond.";
+            }
+
+            async function askGeminiForCategory(itemName) {
+                const prompt = `Classify the item below into one of these: tops, bottoms, shoes, accessories.\nItem: ${itemName}\nCategory:`;
+                try {
+                    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    const data = await res.json();
+                    const result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toLowerCase();
+                    return ['tops', 'bottoms', 'shoes', 'accessories'].includes(result) ? result : null;
+                } catch (err) {
+                    console.error("Gemini Category Error:", err);
+                    return null;
+                }
+            }
+
+            function addMessageToChat(message, sender) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', sender);
+                const currentTime = new Date();
+                const timeString = `${currentTime.getHours()}:${String(currentTime.getMinutes()).padStart(2, '0')}`;
+                messageElement.innerHTML = `
+              <div class="avatar"><i class="fas fa-${sender === 'bot' ? 'robot' : 'user'}"></i></div>
+              <div>
+                <div class="message-content">${formatMessageContent(message)}</div>
+                <div class="message-time"><i class="fas fa-check-double"></i> ${timeString}</div>
+              </div>`;
+                messagesContainer.appendChild(messageElement);
+                scrollToBottom();
+            }
+
+            function formatMessageContent(message) {
+                if (typeof message !== 'string') return '';
+                return message
+                    .replace(/^\*\s*/gm, '')
+                    .replace(/\*/g, '')
+                    .replace(/(^|\n)([A-Z][^:\n]{1,30}):/g, '$1<br><strong>$2:</strong>')
+                    .replace(/^\d+\.\s*(.+?):/gm, '<br><strong>$1:</strong>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/(<br>\s*){3,}/g, '<br><br>');
+            }
+
+            function addTypingIndicator() {
+                const typingElement = document.createElement('div');
+                typingElement.classList.add('message', 'bot', 'typing-indicator');
+                typingElement.innerHTML = `
+              <div class="avatar"><i class="fas fa-robot"></i></div>
+              <div><div class="message-content">
+                <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+              </div></div>`;
+                messagesContainer.appendChild(typingElement);
+                scrollToBottom();
+                return typingElement;
+            }
+
+            function showCategoryItems(category) {
+                const map = {
+                    Tops: 'tops', Bottoms: 'bottoms', Pants: 'bottoms', Shoes: 'shoes', Accessories: 'accessories'
+                };
+                const key = Object.keys(map).find(k => category.includes(k));
+                if (!key) return;
+                const items = wardrobe[map[key]] || [];
+                addMessageToChat(`Here are your ${map[key]}:<br>${items.map(i => `• ${i}`).join('<br>')}`, 'bot');
+            }
+
+            function scrollToBottom() {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            const style = document.createElement('style');
+            style.textContent = `
+            .typing-indicator .message-content {
+              padding: 10px; display: flex; align-items: center;
+            }
+            .typing-dot {
+              height: 8px; width: 8px; background-color: #999;
+              border-radius: 50%; margin: 0 3px;
+              display: inline-block; animation: typing-dot 1.4s infinite ease-in-out;
+            }
+            .typing-dot:nth-child(1) { animation-delay: 0s; }
+            .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+            .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+            @keyframes typing-dot {
+              0%, 60%, 100% { transform: translateY(0); }
+              30% { transform: translateY(-5px); }
+            }
+          `;
+            document.head.appendChild(style);
+        });
+    </script>
+
+
+</body>
+
+</html>
